@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EFL Player Updater</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .back-button {
+            display: block;
+            width: 120px;
+            margin: 20px auto;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .back-button:hover {
+            background-color: #2980b9;
+        }
+
+        .task-section {
+            margin-bottom: 20px;
+        }
+
+        .task-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .task-row input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .add-task {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .attribute-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .attribute-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .attribute-name {
+            flex: 1;
+            font-weight: bold;
+        }
+
+        input[type="number"] {
+            width: 70px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            -moz-appearance: textfield;
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .tpe-cost {
+            width: 60px;
+            text-align: right;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .total-tpe {
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .valid-tpe {
+            background-color: #e8f5e9;
+            color: #27ae60;
+        }
+
+        .invalid-tpe {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 5px;
+        }
+
+        #bbcode-output {
+            white-space: pre-wrap;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .scrape-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #e3f2fd;
+            border-radius: 5px;
+        }
+
+        .scrape-button {
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        #playerUrl {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-button">← Back to Hub</a>
+        <h1>EFL Player Updater</h1>
+
+        <div class="scrape-section">
+            <h3>Scrape Player Attributes</h3>
+            <input type="url" id="playerUrl" placeholder="Enter player update page URL">
+            <button class="scrape-button" onclick="scrapePlayerAttributes()">Scrape Attributes</button>
+            <div class="loading" id="loadingIndicator">
+                <div class="loading-spinner"></div>
+                <p>Scraping player data...</p>
+            </div>
+        </div>
+
+        <div class="task-section">
+            <h3>Completed Tasks</h3>
+            <div id="tasksContainer">
+                <div class="task-row">
+                    <input type="text" placeholder="Task Name" class="task-name">
+                    <input type="url" placeholder="Task Link" class="task-link">
+                    <input type="number" placeholder="TPE" class="task-tpe" min="0">
+                </div>
+            </div>
+            <button class="add-task" onclick="addTask()">+ Add Task</button>
+        </div>
+
+        <div class="attribute-grid" id="attributesGrid"></div>
+
+        <div id="totalTPE" class="total-tpe valid-tpe">Total TPE Used: 0</div>
+
+        <button id="generateButton" style="width: 100%; padding: 15px; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Generate Update Code
+        </button>
+
+        <div class="modal" id="outputModal">
+            <div class="modal-content">
+                <h2>Update BBCode</h2>
+                <div id="bbcode-output"></div>
+                <button onclick="document.getElementById('outputModal').style.display = 'none'" 
+                        style="margin-top: 15px; padding: 10px 20px; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const attributes = [
+            'Speed', 'Strength', 'Agility', 'Intelligence',
+            'Tackling', 'Hands', 'Pass Blocking', 'Run Blocking',
+            'Arm', 'Throw Accuracy', 'Kick Power', 'Kick Accuracy'
+        ];
+
+        // Initialize attribute grid
+        const grid = document.getElementById('attributesGrid');
+        attributes.forEach(attr => {
+            const div = document.createElement('div');
+            div.className = 'attribute-row';
+            div.innerHTML = `
+                <span class="attribute-name">${attr}</span>
+                <input type="number" min="35" max="99" value="35" class="current-value" data-attribute="${attr}">
+                <input type="number" min="35" max="99" value="35" class="updated-value" data-attribute="${attr}">
+                <span class="tpe-cost">0</span>
+            `;
+            grid.appendChild(div);
+        });
+
+        // Task management
+        function addTask() {
+            const container = document.getElementById('tasksContainer');
+            const newRow = document.createElement('div');
+            newRow.className = 'task-row';
+            newRow.innerHTML = `
+                <input type="text" placeholder="Task Name" class="task-name">
+                <input type="url" placeholder="Task Link" class="task-link">
+                <input type="number" placeholder="TPE" class="task-tpe" min="0">
+            `;
+            container.appendChild(newRow);
+        }
+
+        // TPE calculation
+        function calculateTPE(currentValue, updatedValue) {
+            let tpe = 0;
+            for (let i = currentValue; i < updatedValue; i++) {
+                if (i < 50) tpe += 1;
+                else if (i < 60) tpe += 2;
+                else if (i < 70) tpe += 3;
+                else if (i < 80) tpe += 6;
+                else if (i < 85) tpe += 8;
+                else if (i < 90) tpe += 12;
+                else if (i < 95) tpe += 18;
+                else tpe += 24;
+            }
+            return tpe;
+        }
+
+        // Update totals and validation
+        function updateTotals() {
+            let total = 0;
+            
+            // Calculate attribute TPE
+            document.querySelectorAll('.attribute-row').forEach(row => {
+                const current = parseInt(row.querySelector('.current-value').value) || 35;
+                const updated = parseInt(row.querySelector('.updated-value').value) || 35;
+                const tpeCost = calculateTPE(current, updated);
+                row.querySelector('.tpe-cost').textContent = tpeCost;
+                total += tpeCost;
+            });
+
+            // Calculate task TPE
+            document.querySelectorAll('.task-tpe').forEach(input => {
+                total += parseInt(input.value) || 0;
+            });
+
+            const tpeDisplay = document.getElementById('totalTPE');
+            tpeDisplay.textContent = `Total TPE Used: ${total}`;
+            
+            // Update validation color
+            if (total < 0) {
+                tpeDisplay.className = 'total-tpe invalid-tpe';
+            } else {
+                tpeDisplay.className = 'total-tpe valid-tpe';
+            }
+        }
+
+        // Generate BBCode
+        document.getElementById('generateButton').addEventListener('click', function() {
+            let bbcode = "[b]Tasks Completed:[/b]\n";
+            
+            // Add tasks
+            document.querySelectorAll('.task-row').forEach(row => {
+                const name = row.querySelector('.task-name').value;
+                const link = row.querySelector('.task-link').value;
+                const tpe = row.querySelector('.task-tpe').value;
+                
+                if (name && link && tpe) {
+                    bbcode += `[url=${link}]${name} (+${tpe} TPE)[/url]\n`;
+                }
+            });
+
+            bbcode += "\n[b]Attributes Updated:[/b]\n";
+            
+            // Add attributes
+            document.querySelectorAll('.attribute-row').forEach(row => {
+                const attr = row.querySelector('.attribute-name').textContent;
+                const current = row.querySelector('.current-value').value;
+                const updated = row.querySelector('.updated-value').value;
+                
+                if (current !== updated) {
+                    bbcode += `${attr}: [color=green][b]${current} → ${updated}[/b][/color]\n`;
+                } else {
+                    bbcode += `${attr}: ${current}\n`;
+                }
+            });
+
+            document.getElementById('bbcode-output').textContent = bbcode;
+            document.getElementById('outputModal').style.display = 'block';
+        });
+
+        // Scrape player attributes from forum post
+        async function scrapePlayerAttributes() {
+            const playerUrl = document.getElementById('playerUrl').value.trim();
+            if (!playerUrl) {
+                alert('Please enter a valid URL');
+                return;
+            }
+
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            loadingIndicator.style.display = 'block';
+
+            try {
+                // Use a CORS proxy (you might want to set up your own)
+                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                const response = await fetch(proxyUrl + playerUrl);
+                const html = await response.text();
+
+                // Parse the HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // Extract attributes from text content (assuming format like "Speed: 48 (Max 90)")
+                const textContent = doc.body.textContent;
+                const attributePattern = /(\w+):\s*(\d+)(?:\s*\(Max\s*\d+\))?/g;
+                let match;
+                const foundAttributes = {};
+
+                while ((match = attributePattern.exec(textContent)) !== null) {
+                    const attrName = match[1];
+                    const attrValue = parseInt(match[2]);
+                    
+                    // Match our known attributes (case insensitive)
+                    const matchedAttr = attributes.find(a => a.toLowerCase() === attrName.toLowerCase());
+                    if (matchedAttr) {
+                        foundAttributes[matchedAttr] = attrValue;
+                    }
+                }
+
+                // Update the form with scraped values
+                if (Object.keys(foundAttributes).length > 0) {
+                    document.querySelectorAll('.attribute-row').forEach(row => {
+                        const attrName = row.querySelector('.attribute-name').textContent;
+                        if (foundAttributes[attrName]) {
+                            row.querySelector('.current-value').value = foundAttributes[attrName];
+                            row.querySelector('.updated-value').value = foundAttributes[attrName];
+                        }
+                    });
+                    updateTotals();
+                    alert('Successfully scraped player attributes!');
+                } else {
+                    alert('Could not find player attributes in the page. Please check the URL and try again.');
+                }
+            } catch (error) {
+                console.error('Scraping failed:', error);
+                alert('Failed to scrape player attributes. Please check the URL and try again.');
+            } finally {
+                loadingIndicator.style.display = 'none';
+            }
+        }
+
+        // Event listeners
+        document.querySelectorAll('.current-value').forEach(input => {
+            input.addEventListener('input', function() {
+                const updated = this.closest('.attribute-row').querySelector('.updated-value');
+                updated.min = this.value;
+                if (parseInt(updated.value) < parseInt(this.value)) {
+                    updated.value = this.value;
+                }
+                updateTotals();
+            });
+        });
+
+        document.querySelectorAll('.updated-value').forEach(input => {
+            input.addEventListener('input', function() {
+                const current = this.closest('.attribute-row').querySelector('.current-value');
+                if (parseInt(this.value) < parseInt(current.value)) {
+                    this.value = current.value;
+                }
+                updateTotals();
+            });
+        });
+
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', updateTotals);
+        });
+
+        // Initial setup
+        updateTotals();
+    </script>
+</body>
+</html>
